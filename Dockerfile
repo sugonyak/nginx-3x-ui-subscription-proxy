@@ -14,10 +14,6 @@ ENV TLS_MODE=off
 # Выставляем порты
 EXPOSE ${SITE_PORT}/tcp
 
-# Копируем конфигурацию Nginx
-RUN rm /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx.conf.esh /usr/local/openresty/nginx/conf/
-
 # Устанавливаем esh
 RUN apk upgrade && apk add --no-cache \
     esh git
@@ -29,6 +25,10 @@ RUN git clone https://github.com/ledgetech/lua-resty-http.git && \
 
 # Устанавливаем Lua-библиотеку resty-http
 #RUN luarocks install lua-resty-http
+
+# Копируем конфигурацию Nginx
+RUN rm /usr/local/openresty/nginx/conf/nginx.conf
+COPY nginx.conf.esh /usr/local/openresty/nginx/conf/
 
 # Копируем конфигурацию Lua
 COPY config_fetcher.lua /etc/nginx/lua/
