@@ -36,7 +36,6 @@ for _, base_url in ipairs(servers) do
         -- Обрабатываем статистику
         local userinfo = res.headers["Subscription-Userinfo"]
         if userinfo then
-            -- Парсим статистику
             local upload = tonumber(string.match(userinfo, "upload=(%d+)"))
             local download = tonumber(string.match(userinfo, "download=(%d+)"))
             local total = tonumber(string.match(userinfo, "total=(%d+)"))
@@ -44,35 +43,22 @@ for _, base_url in ipairs(servers) do
             
             if upload then total_upload = total_upload + upload end
             if download then total_download = total_download + download end
-            -- Для total берем минимальное значение из всех серверов
             if total then
-                if total_quota == 0 then
-                    total_quota = total
-                else
-                    total_quota = math.min(total_quota, total)
-                end
+                total_quota = total_quota == 0 and total or math.min(total_quota, total)
             end
-            -- Для expire берем минимальное значение из всех серверов
             if expire then
-                if expire_time == 0 then
-                    expire_time = expire
-                else
-                    expire_time = math.min(expire_time, expire)
-                end
+                expire_time = expire_time == 0 and expire or math.min(expire_time, expire)
             end
         end
 
-        -- Берем Profile-Title от первого сервера, у которого он есть
         if not profile_title and res.headers["Profile-Title"] then
             profile_title = res.headers["Profile-Title"]
         end
 
-        -- Берем Update-Interval от первого сервера, у которого он есть
         if not update_interval and res.headers["Profile-Update-Interval"] then
             update_interval = res.headers["Profile-Update-Interval"]
         end
-        
-        -- Декодируем ответ
+
         local decoded_config = ngx.decode_base64(res.body)
         if decoded_config then
             table.insert(configs, decoded_config)
@@ -80,7 +66,7 @@ for _, base_url in ipairs(servers) do
             ngx.log(ngx.ERR, "Failed to decode base64 from ", url)
         end
     else
-        ngx.log(ngx.ERR, "Error fetching from ", url, ": ", err)
+        ngx.log(ngx.ERR, "Error fetching from ", url, ": ", err or "unknown error")
     end
 end
 
