@@ -40,14 +40,16 @@ for _, base_url in ipairs(servers) do
             local download = tonumber(string.match(userinfo, "download=(%d+)"))
             local total = tonumber(string.match(userinfo, "total=(%d+)"))
             local expire = tonumber(string.match(userinfo, "expire=(%d+)"))
-            
+
             if upload then total_upload = total_upload + upload end
             if download then total_download = total_download + download end
             if total then
                 total_quota = total_quota == 0 and total or math.min(total_quota, total)
             end
             if expire then
-                expire_time = expire_time == 0 and expire or math.min(expire_time, expire)
+                -- expire=0 means unlimited, use earliest real expiration date
+                local exp_num = tonumber(expire)
+                expire_time = (exp_num > 0 and (expire_time == 0 or exp_num < expire_time)) and exp_num or expire_time
             end
         end
 
@@ -75,11 +77,11 @@ if #configs > 0 then
     -- Объединяем без добавления новой строки между конфигурациями
     local combined_configs = table.concat(configs)
     local encoded_combined_configs = ngx.encode_base64(combined_configs)
-    
+
     -- Устанавливаем заголовки
     ngx.header.content_type = "text/plain; charset=utf-8"
     ngx.header.content_length = #encoded_combined_configs
-    
+
     -- Устанавливаем агрегированные заголовки
     if profile_title then
         ngx.header["Profile-Title"] = profile_title
@@ -87,7 +89,7 @@ if #configs > 0 then
     if update_interval then
         ngx.header["Profile-Update-Interval"] = update_interval
     end
-    
+
     -- Устанавливаем агрегированную статистику
     if total_upload > 0 or total_download > 0 then
         ngx.header["Subscription-Userinfo"] = string.format(
@@ -98,7 +100,7 @@ if #configs > 0 then
             expire_time
         )
     end
-    
+
     ngx.print(encoded_combined_configs)
 else
     ngx.status = ngx.HTTP_BAD_GATEWAY
