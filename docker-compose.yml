@@ -11,5 +11,5 @@ services:
       - ${SITE_PORT}:${SITE_PORT}
     volumes:
       - ${PATH_SSL_KEY}/fullchain.pem:/etc/nginx/ssl/fullchain.pem
-      - ${PATH_SSL_KEY}/privkey.pem:/etc/nginx/ssl/privkey.pem 
+      - ${PATH_SSL_KEY}/privkey.pem:/etc/nginx/ssl/privkey.pem
     restart: always
