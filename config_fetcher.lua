@@ -23,6 +23,7 @@ local total_quota = 0
 local expire_time = 0
 local profile_title = nil
 local update_interval = nil
+local announce = nil
 
 -- Запрашиваем конфигурацию с каждого сервера
 for _, base_url in ipairs(servers) do
@@ -64,6 +65,10 @@ for _, base_url in ipairs(servers) do
                 update_interval = res.headers["Profile-Update-Interval"]
             end
 
+            if not announce and res.headers["Announce"] then
+                announce = res.headers["Announce"]
+            end
+
             local decoded_config = ngx.decode_base64(res.body)
             if decoded_config then
                 table.insert(configs, decoded_config)
@@ -96,6 +101,9 @@ if #configs > 0 then
     end
     if update_interval then
         ngx.header["Profile-Update-Interval"] = update_interval
+    end
+    if announce then
+        ngx.header["Announce"] = announce
     end
 
     -- Устанавливаем агрегированную статистику
